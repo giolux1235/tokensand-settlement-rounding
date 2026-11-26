@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "test:tokensand": "node tokensand-check.mjs",
+    "test:tokensand:watch": "node --watch tokensand-check.mjs",
+    "test": "npm run test:tokensand"
+  }
+}

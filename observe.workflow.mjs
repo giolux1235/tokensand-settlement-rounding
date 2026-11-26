@@ -10,6 +10,6 @@ const cases = [
 ];
 export default {
   cases, candidate: reconcile, checks:[{id:"settlement",label:"Settlement allocation agrees"}],
-  evaluate: ({input,output})=>({settlement:() => undefined}),
+  evaluate: ({input,output})=>({settlement:isDeepStrictEqual(output,input.expected)}),
   maxCallsPerRun:{baseline:0,candidate:0}
 };
