@@ -1,0 +1,61 @@
+name: Settlement checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  settlement:
+    name: Tokens& settlement checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Evaluate this revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision=$(git rev-parse HEAD)
+          printf '## Tokens& settlement checks\n\nRevision: `%s`\n\n' "$revision" >> "$GITHUB_STEP_SUMMARY"
+          result=$(mktemp)
+          trap 'rm -f "$result"' EXIT
+          image=python:3.12-alpine@sha256:a61cbd76a882645de7f91423329fe43a67eed60d7da24f9e5331414bb3618b20
+          if ! docker run --rm -i --network none --read-only --cap-drop ALL \
+              --security-opt no-new-privileges --user 65534:65534 --pids-limit 64 --memory 256m \
+              --volume "$GITHUB_WORKSPACE:/app:ro" --workdir /app "$image" python -BI - >"$result" 2>/dev/null <<'PY'
+          import contextlib, os, sys, unittest
+          sys.path.insert(0, '/app')
+          with open(os.devnull, 'w') as sink, contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+              suite = unittest.defaultTestLoader.discover('/app')
+              result = unittest.TestResult()
+              suite.run(result)
+          print(result.testsRun, len(result.failures), len(result.errors),
+                len(result.skipped) + len(result.expectedFailures) + len(result.unexpectedSuccesses))
+          PY
+          then
+            echo 'Runner unavailable. Rerun this job or run `python3 -m unittest -v` locally.' >> "$GITHUB_STEP_SUMMARY"
+            exit 2
+          fi
+          if ! grep -Exq '[0-9]{1,6} [0-9]{1,6} [0-9]{1,6} [0-9]{1,6}' "$result" || (( $(wc -l < "$result") != 1 )); then
+            echo 'Result unreadable. Run `python3 -m unittest -v` locally.' >> "$GITHUB_STEP_SUMMARY"
+            exit 2
+          fi
+          read -r total failed errors skipped < "$result"
+          passed=$((total - failed - errors - skipped))
+          if (( total == 0 || passed < 0 )); then
+            echo 'No complete result. Check discovery with `python3 -m unittest -v`.' >> "$GITHUB_STEP_SUMMARY"
+            exit 2
+          fi
+          printf 'Passed %d/%d · Failed %d · Errors %d · Skipped or nonstandard %d\n' "$passed" "$total" "$failed" "$errors" "$skipped" | tee -a "$GITHUB_STEP_SUMMARY"
+          if (( passed != total )); then
+            echo 'Run `python3 -m unittest -v` locally for the affected cases.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo 'All settlement cases passed on this revision.' >> "$GITHUB_STEP_SUMMARY"
