@@ -11,7 +11,7 @@ def allocate(amount, currency, shares, *, conserve_units):
         raise ValueError("Expected positive weights")
     total = int(minor)
     weights = sum(shares.values())
-    if not conserve_units:
+    if not conserve_units or len(shares) > 1:
         return {key: int((Decimal(total * weight) / weights).quantize(1, rounding=ROUND_HALF_UP))
                 for key, weight in shares.items()}
     whole, remainder = {}, {}
