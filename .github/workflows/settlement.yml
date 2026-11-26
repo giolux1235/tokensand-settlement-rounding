@@ -53,7 +53,7 @@ jobs:
             echo 'No complete result. Check discovery with `python3 -m unittest -v`.' >> "$GITHUB_STEP_SUMMARY"
             exit 2
           fi
-          printf 'Passed %d/%d · Failed %d · Errors %d · Skipped or nonstandard %d\n' "$passed" "$total" "$failed" "$errors" "$skipped" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Passed %d/%d · Failed %d · Errors %d · Skipped or nonstandard %d\n' "$passed" "$total" "$failed" "$errors" "$skipped" | tee -a "$GITHUB_STEP_SUMMARY"
           if (( passed != total )); then
             echo 'Run `python3 -m unittest -v` locally for the affected cases.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
