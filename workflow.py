@@ -9,7 +9,7 @@ def sample(case, amount, currency, weights, total, expected):
 
 
 def run(item, protect):
-    return allocate(item["amount"], item["currency"], item["shares"], conserve_units=False)
+    return allocate(item["amount"], item["currency"], item["shares"], conserve_units=protect)
 
 
 def evaluate(item, output, variant):
