@@ -49,8 +49,8 @@ jobs:
           fi
           read -r total failed errors skipped < "$result"
           passed=$((total - failed - errors - skipped))
-          if (( total == 0 || passed < 0 )); then
-            echo 'No complete result. Check discovery with `python3 -m unittest -v`.' >> "$GITHUB_STEP_SUMMARY"
+          if (( total < 4 || passed < 0 )); then
+            echo 'Expected at least four settlement cases. Check discovery with `python3 -m unittest -v`.' | tee -a "$GITHUB_STEP_SUMMARY"
             exit 2
           fi
           printf 'Passed %d/%d · Failed %d · Errors %d · Skipped or nonstandard %d\n' "$passed" "$total" "$failed" "$errors" "$skipped" | tee -a "$GITHUB_STEP_SUMMARY"
