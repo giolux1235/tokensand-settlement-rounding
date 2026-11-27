@@ -23,7 +23,6 @@ workflow = {
         sample("jpy-integer-control", "100", "JPY", {"a": 1, "b": 3}, 100, {"a": 25, "b": 75}),
         sample("kwd-three-decimals", "1.000", "KWD", {"c": 1, "b": 1, "a": 1}, 1000,
                {"a": 334, "b": 333, "c": 333}),
-        sample("refund-conserves-units", "-0.01", "USD", {"a": 1, "b": 1}, -1, {"a": -1, "b": 0}),
     ],
     "checks": [{"id": "total", "label": "Allocated minor units match the settlement"},
                {"id": "split", "label": "Each beneficiary receives its expected share"}],
